@@ -55,7 +55,84 @@ The following environment variables can be set to configure runtime installation
 | `CODEX_ENV_PHP_VERSION`   | PHP version to install  | `8.4`, `8.3`, `8.2`                |                                                                      |
 | `CODEX_ENV_JAVA_VERSION`   | JDK version to install  | `25`, `24`, `23`, `22`, `21`, `17`, `11`                |                                                                      |
 
+### Disabling languages
 
+To use only the languages you care about, simply **omit or leave empty** the environment variables for languages you don't need. The setup script will skip configuration for any language whose `CODEX_ENV_*` variable is not set or is empty.
+
+For example, to enable only Python and Node.js:
+
+```sh
+docker run --rm -it \
+    -e CODEX_ENV_PYTHON_VERSION=3.12 \
+    -e CODEX_ENV_NODE_VERSION=20 \
+    -v $(pwd):/workspace/$(basename $(pwd)) -w /workspace/$(basename $(pwd)) \
+    ghcr.io/openai/codex-universal:latest
+```
+
+All other languages (Rust, Go, Swift, Ruby, PHP, Java) will remain at their default versions but won't be switched during container startup, saving time and resources.
+
+### Using as a devcontainer
+
+You can use `codex-universal` to power a VS Code devcontainer in your project. Here's a minimal setup:
+
+1. Create a `.devcontainer` directory in your project:
+
+```bash
+mkdir -p .devcontainer
+cd .devcontainer
+```
+
+2. Clone this repository (shallow clone to save space):
+
+```bash
+git clone https://github.com/openai/codex-universal --depth 1
+```
+
+3. Create a `devcontainer.json` file:
+
+```bash
+cat <<'EOF' > devcontainer.json
+{
+  "name": "Custom Dev Container",
+  "build": {
+    "dockerfile": "./codex-universal/Dockerfile"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "dbaeumer.vscode-eslint"
+      ]
+    }
+  },
+  "postCreateCommand": "echo 'Dev container ready!'"
+}
+EOF
+```
+
+Alternatively, you can reference the pre-built image directly without cloning:
+
+```json
+{
+  "name": "Codex Universal Dev Container",
+  "image": "ghcr.io/openai/codex-universal:latest",
+  "containerEnv": {
+    "CODEX_ENV_PYTHON_VERSION": "3.12",
+    "CODEX_ENV_NODE_VERSION": "20"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "dbaeumer.vscode-eslint"
+      ]
+    }
+  },
+  "postCreateCommand": "echo 'Dev container ready!'"
+}
+```
+
+This approach is faster and doesn't require cloning the repository, but requires internet access to pull the image.
 
 ## What's included
 
