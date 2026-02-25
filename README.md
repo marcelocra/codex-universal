@@ -73,48 +73,23 @@ All other languages (Rust, Go, Swift, Ruby, PHP, Java) will remain at their defa
 
 ### Using as a devcontainer
 
-You can use `codex-universal` to power a VS Code devcontainer in your project. Here's a minimal setup:
+You can use `codex-universal` as a VS Code devcontainer for your project. There are two main approaches:
 
-1. Create a `.devcontainer` directory in your project:
+#### Option 1: Using the pre-built image (Recommended)
+
+This is the fastest and simplest approach. The image is automatically pulled from GitHub Container Registry.
+
+**Step 1:** Create the `.devcontainer` directory in your project root:
 
 ```bash
 mkdir -p .devcontainer
-cd .devcontainer
 ```
 
-2. Clone this repository (shallow clone to save space):
-
-```bash
-git clone https://github.com/openai/codex-universal --depth 1
-```
-
-3. Create a `devcontainer.json` file:
-
-```bash
-cat <<'EOF' > devcontainer.json
-{
-  "name": "Custom Dev Container",
-  "build": {
-    "dockerfile": "./codex-universal/Dockerfile"
-  },
-  "customizations": {
-    "vscode": {
-      "extensions": [
-        "ms-python.python",
-        "dbaeumer.vscode-eslint"
-      ]
-    }
-  },
-  "postCreateCommand": "echo 'Dev container ready!'"
-}
-EOF
-```
-
-Alternatively, you can reference the pre-built image directly without cloning:
+**Step 2:** Create `.devcontainer/devcontainer.json` with your configuration:
 
 ```json
 {
-  "name": "Codex Universal Dev Container",
+  "name": "My Dev Container",
   "image": "ghcr.io/openai/codex-universal:latest",
   "containerEnv": {
     "CODEX_ENV_PYTHON_VERSION": "3.12",
@@ -132,13 +107,99 @@ Alternatively, you can reference the pre-built image directly without cloning:
 }
 ```
 
-This approach is faster and doesn't require cloning the repository, but requires internet access to pull the image.
+**Step 3:** Open the project in VS Code and:
+- Press `F1` or `Ctrl+Shift+P` (Windows/Linux) / `Cmd+Shift+P` (Mac)
+- Type "Dev Containers: Reopen in Container"
+- Press Enter
 
-#### Enabling only specific languages in devcontainer
+The container will start with Python 3.12 and Node.js 20 configured. All other languages remain at default versions.
 
-To enable only the languages you need in your devcontainer, set only the corresponding `CODEX_ENV_*` environment variables in the `containerEnv` section. Languages without a set environment variable will remain at their default versions but won't be reconfigured.
+#### Option 2: Building from source
 
-For example, to enable only Rust and Go:
+Use this approach if you need to customize the Dockerfile or test local changes.
+
+**Step 1:** Create the `.devcontainer` directory:
+
+```bash
+mkdir -p .devcontainer
+cd .devcontainer
+```
+
+**Step 2:** Clone the codex-universal repository (shallow clone to save space):
+
+```bash
+git clone https://github.com/openai/codex-universal --depth 1
+```
+
+**Step 3:** Create `.devcontainer/devcontainer.json`:
+
+```json
+{
+  "name": "Custom Dev Container",
+  "build": {
+    "dockerfile": "./codex-universal/Dockerfile"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "dbaeumer.vscode-eslint"
+      ]
+    }
+  },
+  "postCreateCommand": "echo 'Dev container ready!'"
+}
+```
+
+**Step 4:** Open the project in VS Code and reopen in container (same as Option 1, Step 3).
+
+The Dockerfile will be built locally. This takes longer but allows for customization.
+
+#### Configuring specific languages only
+
+You can enable only the languages you need by setting the corresponding `CODEX_ENV_*` environment variables. Languages without a configured environment variable will remain at their default versions but won't be reconfigured during container startup.
+
+**Example 1: Python-only development**
+
+Perfect for Python projects, data science, or machine learning work.
+
+**Step 1:** Create `.devcontainer/devcontainer.json`:
+
+```json
+{
+  "name": "Python Dev Container",
+  "image": "ghcr.io/openai/codex-universal:latest",
+  "containerEnv": {
+    "CODEX_ENV_PYTHON_VERSION": "3.12"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-python.black-formatter"
+      ]
+    }
+  },
+  "postCreateCommand": "python --version && pip --version"
+}
+```
+
+**Step 2:** Open in VS Code and reopen in container.
+
+**Step 3:** Verify Python is configured:
+
+```bash
+python --version  # Should show Python 3.12.x
+poetry --version  # Poetry is pre-installed
+uv --version      # uv is pre-installed
+```
+
+**Example 2: Rust and Go development**
+
+Ideal for systems programming or cloud-native development.
+
+**Step 1:** Create `.devcontainer/devcontainer.json`:
 
 ```json
 {
@@ -155,28 +216,59 @@ For example, to enable only Rust and Go:
         "golang.go"
       ]
     }
-  }
+  },
+  "postCreateCommand": "rustc --version && go version"
 }
 ```
 
-Or for a Python-only environment:
+**Step 2:** Open in VS Code and reopen in container.
+
+**Step 3:** Verify both languages are configured:
+
+```bash
+rustc --version  # Should show rustc 1.87.0
+cargo --version  # Cargo is included with Rust
+go version       # Should show go version go1.23.8
+```
+
+**Example 3: Full-stack web development (Node.js + Python + PHP)**
+
+For web applications with multiple backend languages.
+
+**Step 1:** Create `.devcontainer/devcontainer.json`:
 
 ```json
 {
-  "name": "Python Dev Container",
+  "name": "Full-Stack Web Dev Container",
   "image": "ghcr.io/openai/codex-universal:latest",
   "containerEnv": {
-    "CODEX_ENV_PYTHON_VERSION": "3.12"
+    "CODEX_ENV_NODE_VERSION": "20",
+    "CODEX_ENV_PYTHON_VERSION": "3.12",
+    "CODEX_ENV_PHP_VERSION": "8.4"
   },
   "customizations": {
     "vscode": {
       "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
         "ms-python.python",
-        "ms-python.vscode-pylance"
+        "bmewburn.vscode-intelephense-client"
       ]
     }
-  }
+  },
+  "postCreateCommand": "node --version && python --version && php --version"
 }
+```
+
+**Step 2:** Open in VS Code and reopen in container.
+
+**Step 3:** Verify all languages:
+
+```bash
+node --version    # Should show v20.x.x
+npm --version     # npm, yarn, pnpm are pre-installed
+python --version  # Should show Python 3.12.x
+php --version     # Should show PHP 8.4.x
 ```
 
 ## What's included
