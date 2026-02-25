@@ -134,6 +134,51 @@ Alternatively, you can reference the pre-built image directly without cloning:
 
 This approach is faster and doesn't require cloning the repository, but requires internet access to pull the image.
 
+#### Enabling only specific languages in devcontainer
+
+To enable only the languages you need in your devcontainer, set only the corresponding `CODEX_ENV_*` environment variables in the `containerEnv` section. Languages without a set environment variable will remain at their default versions but won't be reconfigured.
+
+For example, to enable only Rust and Go:
+
+```json
+{
+  "name": "Rust and Go Dev Container",
+  "image": "ghcr.io/openai/codex-universal:latest",
+  "containerEnv": {
+    "CODEX_ENV_RUST_VERSION": "1.87.0",
+    "CODEX_ENV_GO_VERSION": "1.23.8"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "rust-lang.rust-analyzer",
+        "golang.go"
+      ]
+    }
+  }
+}
+```
+
+Or for a Python-only environment:
+
+```json
+{
+  "name": "Python Dev Container",
+  "image": "ghcr.io/openai/codex-universal:latest",
+  "containerEnv": {
+    "CODEX_ENV_PYTHON_VERSION": "3.12"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance"
+      ]
+    }
+  }
+}
+```
+
 ## What's included
 
 In addition to the packages specified in the table above, the following packages are also installed:
